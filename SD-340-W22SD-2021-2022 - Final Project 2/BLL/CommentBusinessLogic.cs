@@ -14,7 +14,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.BLL
 
         public List<Comment> GetAllCommentsByTicket(int ticketId)
         {
-            return repo.GetAll(comment => comment.TicketId == ticketId);
+            return repo.GetList(comment => comment.TicketId == ticketId).ToList();
         }
 
         public void CreateAndSaveComment(Comment NewComment, Ticket ticket, ApplicationUser user)

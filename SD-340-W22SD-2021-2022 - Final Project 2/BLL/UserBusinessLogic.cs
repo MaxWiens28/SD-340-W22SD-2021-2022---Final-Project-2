@@ -48,14 +48,12 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.BLL
 
         public ApplicationUser GetUserByUserId(string userId)
         {
-            return _userManager.Users.Include(user => user.OwnedTickets).Include(user => user.WatchedTickets).Include(user => user.Tickets).Include(user => user.Projects).First(user => user.Id == userId);
+            return _userManager.Users.First(user => user.Id == userId);
         }
 
-        public async Task<ApplicationUser> GetCurrentUserByNameAsync(string identity)
+        public ApplicationUser GetCurrentUserByName(string identity)
         {
-            ApplicationUser currUser = await _userManager.Users.Include(user => user.OwnedTickets).Include(user => user.WatchedTickets).Include(user => user.Tickets).Include(user => user.Projects).FirstAsync(user => user.UserName == identity);
-            return currUser;
+          return _userManager.Users.First(user => user.UserName == identity);
         }
-
     }
 }

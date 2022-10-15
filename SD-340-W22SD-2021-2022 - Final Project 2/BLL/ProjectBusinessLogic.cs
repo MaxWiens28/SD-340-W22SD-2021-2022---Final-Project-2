@@ -21,6 +21,10 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.BLL
             return repo.GetList(project => project.Developers.Contains(currUser)).ToList();
         }
 
+        public Project GetProjectById(int projectId)
+        {
+            return repo.Get(projectId);
+        }
         public List<Project> GetAllProjects()
         {
             return repo.GetAll().ToList();
@@ -33,7 +37,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.BLL
 
         public void CreateProject(Project project)
         {
-            repo.Create(project);
+            repo.Add(project);
             repo.Save();
         }
 

@@ -30,7 +30,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
 
             try
             {
-                ApplicationUser user = await userBL.GetCurrentUserByNameAsync(User.Identity.Name);
+                ApplicationUser user = userBL.GetCurrentUserByName(User.Identity.Name);
                 List<string> roles = await userBL.GetUserRoles(user);
                 string role = roles.Find(r => r.Equals("Developer"));
                 if (role == null)

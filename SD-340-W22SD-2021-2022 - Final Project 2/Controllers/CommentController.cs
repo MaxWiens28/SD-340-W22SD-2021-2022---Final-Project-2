@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SD_340_W22SD_2021_2022___Final_Project_2.BLL;
+using SD_340_W22SD_2021_2022___Final_Project_2.DAL;
 using SD_340_W22SD_2021_2022___Final_Project_2.Data;
 using SD_340_W22SD_2021_2022___Final_Project_2.Models;
 using SD_340_W22SD_2021_2022___Final_Project_2.Models.ViewModels;
@@ -13,13 +14,15 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
     {
         private readonly CommentBusinessLogic commentBL;
         private readonly TicketBusinessLogic ticketBL;
+        private readonly UserBusinessLogic userBL;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public CommentController(ApplicationDbContext context,
             UserManager<ApplicationUser> userManager)
         {
             commentBL = new CommentBusinessLogic(new CommentRepository(context));
-            ticketBL = new TicketBusinessLogic(new ticketRepository(context));
+            ticketBL = new TicketBusinessLogic(new TicketRepository(context));
+            userBL = new UserBusinessLogic(userManager);
             _userManager = userManager;
         }
 
@@ -54,7 +57,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
                 bool taskOwners = true;
                 bool taskWatchers = true;
 
-                ApplicationUser currentUser = await _context.Users.Include(u => u.OwnedTickets).FirstAsync(u => u.UserName == User.Identity.Name);
+                ApplicationUser currentUser = userBL.GetCurrentUserByName(User.Identity.Name);
                 Ticket checkTicket = ticketBL.FindTicketById(NewComment.TicketId);
 
                 if (checkTicket.TaskOwners.FirstOrDefault(to => to.Id == currentUser.Id) == null)
@@ -79,9 +82,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
 
             try
             {
-                string userName = User.Identity.Name;
-
-                ApplicationUser user = await _userManager.FindByNameAsync(userName);
+                ApplicationUser user = userBL.GetCurrentUserByName(User.Identity.Name);
 
                 Ticket ticket = ticketBL.FindTicketById(NewComment.TicketId);
 

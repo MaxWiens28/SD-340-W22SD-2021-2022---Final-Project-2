@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SD_340_W22SD_2021_2022___Final_Project_2.BLL;
+using SD_340_W22SD_2021_2022___Final_Project_2.DAL;
 using SD_340_W22SD_2021_2022___Final_Project_2.Data;
 using SD_340_W22SD_2021_2022___Final_Project_2.Models;
 using SD_340_W22SD_2021_2022___Final_Project_2.Models.ViewModels;
@@ -13,12 +14,15 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
     public class TicketController : Controller
     {
         private readonly TicketBusinessLogic ticketBL;
+        private readonly ProjectBusinessLogic projectBL;
+        private readonly UserBusinessLogic userBL;
         private readonly UserManager<ApplicationUser> _userManager;
-
 
         public TicketController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             ticketBL = new TicketBusinessLogic(new TicketRepository(context));
+            projectBL = new ProjectBusinessLogic(new ProjectRepository(context), userManager);
+            userBL = new UserBusinessLogic(userManager);
             _userManager = userManager;
         }
         public IActionResult Index()
@@ -29,7 +33,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
         [Authorize(Roles = "Project Manager")]
         public async Task<IActionResult> Create(int projectId)
         {
-            Project? project = await _context.Project.Include(p => p.Developers).FirstOrDefaultAsync(p => p.Id == projectId);
+            Project? project = projectBL.GetProjectById(projectId);
 
             if (project == null)
             {
@@ -57,6 +61,8 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
             //    return RedirectToAction("Create", new { projectId = projectId });
             //}
 
+            ApplicationUser dev = new ApplicationUser();
+
             if (taskOwnerIds.Count() == 0)
             {
                 return RedirectToAction("Create", new { projectId = projectId });
@@ -64,7 +70,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
 
             foreach (string taskOwnerId in taskOwnerIds)
             {
-                ApplicationUser dev = await _userManager.FindByIdAsync(taskOwnerId);
+               dev = await _userManager.FindByIdAsync(taskOwnerId);
             }
 
             ticketBL.CreateAndSaveTicket(ticket, priority, projectId, taskOwnerIds, dev);
@@ -78,8 +84,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
         {
             try
             {
-                ApplicationUser currentUser = await _context.Users.Include(u => u.OwnedTickets).FirstAsync(u => u.UserName == User.Identity.Name);
-
+                ApplicationUser currentUser = userBL.GetCurrentUserByName(User.Identity.Name);
                 Ticket ticket = ticketBL.FindTicketById(ticketId);
 
                 if (ticket.TaskOwners.FirstOrDefault(to => to.Id == currentUser.Id) == null)
@@ -105,7 +110,7 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
         {
             try
             {
-                ApplicationUser currentUser = await _context.Users.Include(u => u.OwnedTickets).FirstAsync(u => u.UserName == User.Identity.Name);
+                ApplicationUser currentUser = userBL.GetCurrentUserByName(User.Identity.Name);
                 Ticket ticket = ticketBL.FindTicketById(ticketId);
 
                 if (ticket.TaskOwners.FirstOrDefault(to => to.Id == currentUser.Id) == null)
@@ -131,8 +136,8 @@ namespace SD_340_W22SD_2021_2022___Final_Project_2.Controllers
         {
             try
             {
-                ApplicationUser currentUser = await _context.Users.FirstAsync(u => u.UserName == User.Identity.Name);
-                Project project = await _context.Project.Include(p => p.Developers).FirstAsync(p => p.Id == projectId);
+                ApplicationUser currentUser = userBL.GetCurrentUserByName(User.Identity.Name);
+                Project project = projectBL.GetProjectById(projectId);
                 Ticket ticket = ticketBL.FindTicketById(ticketId);
 
                 if (project.Developers.FirstOrDefault(d => d.Id == currentUser.Id) == null)
